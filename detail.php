@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/volunteer.php';
 require_once __DIR__ . '/config/database.php';
 
 $id = intval($_GET['id'] ?? 0);
@@ -76,6 +77,16 @@ include __DIR__ . '/includes/header.php';
                 <a href="submit.php" class="btn btn-primary">发布留言</a>
             </div>
         </div>
+
+        <?php
+        // 志愿响应调度面板（仅居民求助且配置了服务时段时显示；详情与后台共用同一份状态数据）
+        $volunteerState = getVolunteerState($db, $msg['id']);
+        ?>
+        <?php if (!empty($volunteerState['enabled'])): ?>
+        <div id="volunteerPanel"
+             data-message-id="<?= $msg['id'] ?>"
+             data-state="<?= htmlspecialchars(json_encode($volunteerState, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -132,3 +143,4 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+<script src="assets/js/volunteer.js"></script>

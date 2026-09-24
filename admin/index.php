@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/volunteer.php';
 require_once __DIR__ . '/../config/database.php';
 requireAdmin();
 
@@ -46,6 +47,9 @@ $sql = "SELECT * FROM messages $where ORDER BY created_at DESC LIMIT $pageSize O
 $stmt = $db->prepare($sql);
 $stmt->execute($params);
 $messages = $stmt->fetchAll();
+
+// 志愿调度汇总（一次批量查询，与需求详情共用同一统计口径）
+$volunteerSummaries = getVolunteerSummaries($db, array_column($messages, 'id'));
 
 // 统计
 $pendingCount = $db->query("SELECT COUNT(*) FROM messages WHERE status = 0")->fetchColumn();
@@ -106,6 +110,7 @@ include __DIR__ . '/header.php';
                         <th>标题</th>
                         <th>昵称</th>
                         <th>状态</th>
+                        <th>志愿调度</th>
                         <th>浏览</th>
                         <th>时间</th>
                         <th>操作</th>
@@ -113,7 +118,7 @@ include __DIR__ . '/header.php';
                 </thead>
                 <tbody>
                     <?php if (empty($messages)): ?>
-                    <tr><td colspan="8" class="text-center">暂无数据</td></tr>
+                    <tr><td colspan="9" class="text-center">暂无数据</td></tr>
                     <?php else: ?>
                     <?php foreach ($messages as $msg): ?>
                     <tr>
@@ -122,6 +127,17 @@ include __DIR__ . '/header.php';
                         <td class="td-title" title="<?= cleanInput($msg['title']) ?>"><?= cleanInput(mb_substr($msg['title'], 0, 20)) ?></td>
                         <td><?= cleanInput($msg['nickname']) ?></td>
                         <td><span class="status-badge status-<?= getStatusClass($msg['status']) ?>"><?= getStatusLabel($msg['status']) ?></span></td>
+                        <td class="td-volunteer">
+                            <?php $vs = $volunteerSummaries[$msg['id']] ?? null; ?>
+                            <?php if ($vs): ?>
+                                <div class="vol-mini" title="已确认/总名额，待确认，候补">
+                                    <span class="vol-mini-main"><?= $vs['confirmed'] ?>/<?= $vs['quota'] ?> 已确认</span>
+                                    <span class="vol-mini-sub">待确认 <?= $vs['pending'] ?> · 候补 <?= $vs['waitlist'] ?></span>
+                                </div>
+                            <?php else: ?>
+                                <span class="text-muted">—</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?= $msg['views'] ?></td>
                         <td class="td-time"><?= date('m-d H:i', strtotime($msg['created_at'])) ?></td>
                         <td class="td-actions">
@@ -226,12 +242,46 @@ function viewMessage(id) {
             html += '<p><strong>状态：</strong>' + d.status_label + '</p>';
             html += '<p><strong>浏览量：</strong>' + d.views + '</p>';
             html += '<p><strong>时间：</strong>' + d.created_at + '</p>';
+            if (d.volunteer && d.volunteer.enabled) {
+                html += renderAdminVolunteer(d.volunteer);
+            }
             html += '</div>';
             document.getElementById('modalBody').innerHTML = html;
         } else {
             document.getElementById('modalBody').innerHTML = data.msg;
         }
     });
+}
+
+function renderAdminVolunteer(v) {
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+    let html = '<div class="admin-volunteer">';
+    html += '<p><strong>🤝 志愿调度：</strong>已确认 ' + v.totals.confirmed + '/' + v.totals.quota
+        + '，待确认 ' + v.totals.pending + '，候补 ' + v.totals.waitlist + '</p>';
+    v.slots.forEach(function (slot) {
+        html += '<div class="admin-vol-slot">';
+        html += '<p class="admin-vol-slot-head">🕐 ' + esc(slot.start_at.substring(5, 16))
+            + ' ~ ' + esc(slot.end_at.substring(5, 16))
+            + ' ｜ 名额 ' + slot.confirmed + '/' + slot.quota
+            + ' ｜ 待确认 ' + slot.pending + ' ｜ 候补 ' + slot.waitlist + '</p>';
+        if (slot.responses.length) {
+            html += '<table class="admin-vol-table"><tbody>';
+            slot.responses.forEach(function (r) {
+                html += '<tr><td>' + esc(r.volunteer_name) + '</td>'
+                    + '<td>' + (r.volunteer_phone ? esc(r.volunteer_phone) : '—') + '</td>'
+                    + '<td><span class="vol-badge ' + r.status + '">' + r.status_label + '</span></td>'
+                    + '<td>' + esc(r.created_at.substring(5, 16)) + '</td></tr>';
+            });
+            html += '</tbody></table>';
+        }
+        html += '</div>';
+    });
+    html += '</div>';
+    return html;
 }
 
 function closeModal() {

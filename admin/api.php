@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/volunteer.php';
 require_once __DIR__ . '/../config/database.php';
 requireAdmin();
 
@@ -20,6 +21,8 @@ switch ($action) {
         $msg['content'] = nl2br(cleanInput($msg['content']));
         $msg['title'] = cleanInput($msg['title']);
         $msg['nickname'] = cleanInput($msg['nickname']);
+        // 志愿调度状态：与前台需求详情完全同源
+        $msg['volunteer'] = getVolunteerState($db, $id);
         jsonResponse(0, 'ok', $msg);
         break;
 

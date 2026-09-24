@@ -54,6 +54,16 @@ include __DIR__ . '/includes/header.php';
                     <span class="char-count"><span id="charCount">0</span>/2000</span>
                 </div>
 
+                <!-- 志愿需求服务时段（仅居民求助显示） -->
+                <div class="form-group volunteer-slots-group" id="volunteerSlotsGroup" style="display:none;">
+                    <label>🤝 志愿服务时段 <span class="text-muted">(选填，添加后志愿者可按时段响应名额)</span></label>
+                    <div id="slotList" class="slot-list"></div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="addSlotBtn">➕ 添加服务时段</button>
+                    <div class="form-tip">
+                        <p>💡 志愿者提交响应后需由您确认；名额满后自动进入候补，取消响应名额立即释放。</p>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="image">上传图片</label>
                     <div class="upload-area" id="uploadArea">
@@ -84,6 +94,38 @@ include __DIR__ . '/includes/header.php';
 document.getElementById('content').addEventListener('input', function() {
     document.getElementById('charCount').textContent = this.value.length;
 });
+
+// 志愿需求服务时段动态表单
+(function() {
+    const typeRadios = document.querySelectorAll('input[name="type"]');
+    const slotsGroup = document.getElementById('volunteerSlotsGroup');
+    const slotList = document.getElementById('slotList');
+    const addSlotBtn = document.getElementById('addSlotBtn');
+    let slotIndex = 0;
+
+    function toggleSlotsGroup() {
+        const isHelp = document.querySelector('input[name="type"]:checked').value === 'help';
+        slotsGroup.style.display = isHelp ? 'block' : 'none';
+    }
+    typeRadios.forEach(r => r.addEventListener('change', toggleSlotsGroup));
+    toggleSlotsGroup();
+
+    function addSlotRow() {
+        const i = slotIndex++;
+        const row = document.createElement('div');
+        row.className = 'slot-row form-row-inline';
+        row.innerHTML =
+            '<input type="datetime-local" name="slots[' + i + '][start]" class="slot-start" required>' +
+            '<span>至</span>' +
+            '<input type="datetime-local" name="slots[' + i + '][end]" class="slot-end" required>' +
+            '<input type="number" name="slots[' + i + '][quota]" class="slot-quota" min="1" max="999" value="1" title="名额" style="width:90px">' +
+            '<span>人</span>' +
+            '<button type="button" class="btn btn-xs btn-danger slot-remove">✕</button>';
+        slotList.appendChild(row);
+        row.querySelector('.slot-remove').addEventListener('click', function() { row.remove(); });
+    }
+    addSlotBtn.addEventListener('click', addSlotRow);
+})();
 
 // 图片预览
 document.getElementById('image').addEventListener('change', function(e) {
