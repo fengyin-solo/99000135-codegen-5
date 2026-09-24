@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/volunteer.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -22,6 +23,16 @@ if (mb_strlen($title) > 100) jsonResponse(1, '标题不能超过100个字符');
 if (empty($content)) jsonResponse(1, '请输入内容');
 if (mb_strlen($content) > 2000) jsonResponse(1, '内容不能超过2000个字符');
 if (!in_array($type, ['help', 'suggest', 'lost'])) jsonResponse(1, '无效的留言类型');
+
+// 志愿服务时段（仅居民求助，可选项）
+$slots = [];
+if ($type === 'help' && !empty($_POST['slot_date']) && is_array($_POST['slot_date'])) {
+    try {
+        $slots = normalizeSubmittedSlots($_POST);
+    } catch (Exception $e) {
+        jsonResponse(1, $e->getMessage());
+    }
+}
 
 // 处理图片上传
 $imagePath = null;
@@ -54,11 +65,23 @@ if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR
 }
 
 // 入库
+$db = null;
 try {
     $db = getDB();
-    $stmt = $db->prepare("INSERT INTO messages (nickname, phone, type, title, content, image, status) VALUES (?, ?, ?, ?, ?, ?, 0)");
-    $stmt->execute([$nickname, $phone ?: null, $type, $title, $content, $imagePath]);
-    jsonResponse(0, '留言提交成功，等待审核');
+    $visitorId = getVisitorId();
+    $db->beginTransaction();
+    $stmt = $db->prepare("INSERT INTO messages (visitor_id, nickname, phone, type, title, content, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, 0)");
+    $stmt->execute([$visitorId, $nickname, $phone ?: null, $type, $title, $content, $imagePath]);
+    $messageId = (int)$db->lastInsertId();
+
+    if ($type === 'help' && $slots) {
+        insertSlots($db, $messageId, $slots);
+    }
+
+    $db->commit();
+    $slotMsg = $slots ? sprintf('，已发布 %d 个志愿服务时段', count($slots)) : '';
+    jsonResponse(0, '留言提交成功，等待审核' . $slotMsg);
 } catch (Exception $e) {
+    if ($db && $db->inTransaction()) $db->rollBack();
     jsonResponse(500, '服务器错误，请稍后重试');
 }

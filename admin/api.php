@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/volunteer.php';
+require_once __DIR__ . '/../includes/volunteer_actions.php';
 requireAdmin();
 
 header('Content-Type: application/json; charset=utf-8');
@@ -104,6 +106,65 @@ switch ($action) {
             $db->rollBack();
             jsonResponse(1, '操作失败: ' . $e->getMessage());
         }
+        break;
+
+    case 'volunteer_detail':
+        // 后台查看某条求助的完整调度情况（与需求详情页同一数据口径）
+        $id = intval($_GET['id'] ?? 0);
+        $stmt = $db->prepare("SELECT * FROM messages WHERE id = ?");
+        $stmt->execute([$id]);
+        $msg = $stmt->fetch();
+        if (!$msg) jsonResponse(1, '需求不存在');
+        if ($msg['type'] !== 'help') jsonResponse(1, '仅居民求助有志愿服务');
+
+        // 管理员视角：可看全部响应明细和联系方式
+        $state = getVolunteerState($db, $id, '', false, true);
+        if ($state === null) jsonResponse(1, '该需求未发布志愿服务时段');
+
+        $state = buildVolunteerStateJson($db, $state, $id, '');
+        jsonResponse(0, 'ok', [
+            'message' => [
+                'id' => (int)$msg['id'],
+                'title' => cleanInput($msg['title']),
+                'nickname' => cleanInput($msg['nickname']),
+                'status' => (int)$msg['status'],
+            ],
+            'state' => $state,
+        ]);
+        break;
+
+    case 'slot_quota':
+        // 后台调整名额（逐条返回；扩名额自动递补候补，缩名额不清退已确认）
+        $results = [];
+        $slotIds = $_POST['slot_ids'] ?? [];
+        $quotas = $_POST['quotas'] ?? [];
+        if (!is_array($slotIds) || !is_array($quotas)) jsonResponse(1, '参数不合法');
+
+        foreach ($slotIds as $i => $sid) {
+            $sid = (int)$sid;
+            if ($sid <= 0 || !isset($quotas[$i])) continue;
+            $results[] = adminUpdateSlotQuota($db, $sid, (int)$quotas[$i]);
+        }
+        if (empty($results)) jsonResponse(1, '没有需要调整的时段');
+
+        $messageId = (int)($results[0]['message_id'] ?? 0);
+        $state = null;
+        $message = null;
+        if ($messageId > 0) {
+            $mStmt = $db->prepare("SELECT id, title, nickname, status FROM messages WHERE id = ?");
+            $mStmt->execute([$messageId]);
+            $m = $mStmt->fetch();
+            if ($m) {
+                $message = [
+                    'id' => (int)$m['id'],
+                    'title' => cleanInput($m['title']),
+                    'nickname' => cleanInput($m['nickname']),
+                    'status' => (int)$m['status'],
+                ];
+            }
+            $state = buildVolunteerStateJson($db, getVolunteerState($db, $messageId, '', false, true), $messageId, '');
+        }
+        jsonResponse(0, '名额调整完成', ['results' => $results, 'state' => $state, 'message' => $message, 'message_id' => $messageId]);
         break;
 
     default:

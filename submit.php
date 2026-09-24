@@ -54,6 +54,14 @@ include __DIR__ . '/includes/header.php';
                     <span class="char-count"><span id="charCount">0</span>/2000</span>
                 </div>
 
+                <!-- 志愿服务时段（仅居民求助） -->
+                <div class="form-group volunteer-slots-group" id="volunteerSlotsGroup" style="display:none;">
+                    <label>🤝 志愿服务时段 <span class="text-muted">(选填，发布后志愿者可按名额响应，满员自动候补)</span></label>
+                    <div id="slotList" class="slot-list"></div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="addSlotBtn">+ 添加服务时段</button>
+                    <p class="form-hint">每个时段可独立设置名额，时段之间时间不能重叠；留空的时段行将被忽略。</p>
+                </div>
+
                 <div class="form-group">
                     <label for="image">上传图片</label>
                     <div class="upload-area" id="uploadArea">
@@ -109,6 +117,51 @@ function removeImage() {
     document.getElementById('uploadPreview').style.display = 'none';
     document.getElementById('previewImg').src = '';
 }
+
+/* ---- 志愿服务时段编辑 ---- */
+const slotsGroup = document.getElementById('volunteerSlotsGroup');
+const slotList = document.getElementById('slotList');
+
+function toggleSlotsGroup() {
+    const type = document.querySelector('input[name="type"]:checked').value;
+    slotsGroup.style.display = type === 'help' ? 'block' : 'none';
+}
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+    radio.addEventListener('change', toggleSlotsGroup);
+});
+
+function slotRowHTML(index) {
+    const today = new Date().toISOString().slice(0, 10);
+    return `
+        <div class="slot-row">
+            <div class="slot-fields">
+                <label>日期 <input type="date" name="slot_date[]" min="${today}"></label>
+                <label>开始 <input type="time" name="start_time[]"></label>
+                <label>结束 <input type="time" name="end_time[]"></label>
+                <label>名额 <input type="number" name="quota[]" value="1" min="1" max="999" style="width:80px;"></label>
+            </div>
+            <button type="button" class="btn btn-xs btn-danger slot-remove-btn">删除</button>
+        </div>`;
+}
+
+function addSlotRow() {
+    if (slotList.querySelectorAll('.slot-row').length >= 10) {
+        alert('最多添加 10 个服务时段');
+        return;
+    }
+    const wrap = document.createElement('div');
+    wrap.innerHTML = slotRowHTML(slotList.children.length).trim();
+    slotList.appendChild(wrap.firstChild);
+}
+
+document.getElementById('addSlotBtn').addEventListener('click', addSlotRow);
+slotList.addEventListener('click', function(e) {
+    if (e.target.classList.contains('slot-remove-btn')) {
+        e.target.closest('.slot-row').remove();
+    }
+});
+addSlotRow();
+toggleSlotsGroup();
 
 // 表单提交
 document.getElementById('submitForm').addEventListener('submit', function(e) {

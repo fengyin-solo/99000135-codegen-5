@@ -833,3 +833,329 @@ a:hover { color: var(--primary-dark); }
         display: none;
     }
 }
+
+/* ========== 志愿响应调度 ========== */
+.volunteer-panel {
+    margin-top: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fafafa;
+}
+
+.volunteer-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.volunteer-panel-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.volunteer-summary {
+    font-size: 0.9rem;
+    color: #374151;
+    font-weight: 600;
+}
+
+.volunteer-owner-bar,
+.volunteer-respond-bar {
+    padding: 12px 18px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+.volunteer-batch-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.volunteer-tip,
+.form-hint {
+    margin: 8px 0 0;
+    font-size: 0.82rem;
+    color: #6b7280;
+}
+
+.volunteer-slots {
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.volunteer-slot {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.slot-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.slot-time {
+    font-weight: 600;
+    color: #111827;
+}
+
+.slot-quota {
+    font-size: 0.86rem;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.slot-my {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.slot-pick {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #1d4ed8;
+    cursor: pointer;
+}
+
+/* 响应状态徽标（详情页/后台共用） */
+.vr-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.vr-pending { background: #fef3c7; color: #92400e; }
+.vr-confirmed { background: #d1fae5; color: #065f46; }
+.vr-waiting { background: #dbeafe; color: #1e40af; }
+.vr-rejected { background: #f3f4f6; color: #6b7280; }
+.vr-canceled { background: #fee2e2; color: #991b1b; }
+
+.response-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    border-top: 1px dashed #e5e7eb;
+}
+
+.response-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 8px 2px;
+    border-bottom: 1px dashed #f0f0f0;
+    font-size: 0.86rem;
+}
+
+.response-item.response-status-1 { background: #f0fdf4; }
+.response-item.response-status-2 { background: #eff6ff; }
+.response-name { font-weight: 600; color: #111827; }
+.response-phone { color: #4b5563; }
+.response-time { color: #9ca3af; font-size: 0.8rem; margin-left: auto; }
+.response-order { color: #1d4ed8; font-weight: 600; }
+
+/* 逐条结果提示 */
+.volunteer-results {
+    margin: 12px 18px 0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.86rem;
+}
+
+.volunteer-results.has-fail { border-color: #fcd34d; background: #fffbeb; }
+.volunteer-results.all-ok { border-color: #86efac; background: #f0fdf4; }
+
+.vr-result-item { display: flex; gap: 8px; align-items: flex-start; }
+.vr-result-item.is-ok { color: #065f46; }
+.vr-result-item.is-fail { color: #991b1b; }
+
+/* 响应表单 */
+.respond-inputs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.respond-inputs input {
+    flex: 1;
+    min-width: 160px;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* 发布页：服务时段编辑 */
+.volunteer-slots-group .slot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.slot-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.slot-fields {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.slot-fields label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+    color: #6b7280;
+    gap: 4px;
+}
+
+.slot-fields input {
+    padding: 7px 9px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.88rem;
+}
+
+/* ========== 后台志愿调度 ========== */
+.modal-lg {
+    max-width: 860px;
+    width: calc(100% - 32px);
+    max-height: 88vh;
+}
+
+.modal-lg .modal-body {
+    max-height: calc(88vh - 60px);
+    overflow-y: auto;
+}
+
+.td-volunteer { min-width: 170px; }
+
+.volunteer-summary-btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 4px 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    cursor: pointer;
+}
+
+.volunteer-summary-btn:hover {
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+.volunteer-summary-text {
+    font-size: 0.76rem;
+    color: #4b5563;
+}
+
+.av-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+
+.av-summary { margin: 0; color: #374151; }
+
+.av-quota-bar {
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.av-slot {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fafafa;
+}
+
+.av-slot-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.av-slot-time { font-weight: 600; }
+
+.av-quota-input {
+    font-size: 0.84rem;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.av-quota {
+    width: 80px;
+    padding: 5px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+.av-empty { padding: 6px 2px; margin: 8px 0 0; }
+
+.av-results {
+    margin: 10px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.86rem;
+}
+
+@media (max-width: 640px) {
+    .slot-row { flex-direction: column; align-items: stretch; }
+    .slot-fields { flex-direction: column; }
+    .response-time { margin-left: 0; }
+}
